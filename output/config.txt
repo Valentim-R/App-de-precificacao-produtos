@@ -10,5 +10,5 @@ Cabo_de_Vela 0.12 0.17
 Wurth 0.13 0.18
 Oleo_de_Motor 0.12 0.17
 Chave_de_Vela 0.12 0.17
-Palhetas 0.12 0.17
 Braco_Limpador 0.12 0.17
+Palhetas 0.12 0.17
