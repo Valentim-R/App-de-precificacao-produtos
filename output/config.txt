@@ -1,8 +1,14 @@
-Imposto 0.10
-Valor_Min_Frete 78.90
-Taxa_Fixa_SFrete_Gratis 6
+986547125 0.10
+109069063 78.90
+199863785 6
 Amortecedores 0.12 0.17
 Acessorios_de_Limpeza 0.13 0.18
 Velas_Ignição 0.12 0.17
 Limpeza_Automotiva 0.13 0.18
 Borrachas 0.12 0.17
+Cabo_de_Vela 0.12 0.17
+Wurth 0.13 0.18
+Oleo_de_Motor 0.12 0.17
+Chave_de_Vela 0.12 0.17
+Palhetas 0.12 0.17
+Braco_Limpador 0.12 0.17

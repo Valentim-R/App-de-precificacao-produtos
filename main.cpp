@@ -5,15 +5,38 @@
 #include <iomanip>
 #include <cmath>
 
-#define IMPOSTO "Imposto"
-#define VALOR_MIN_FRETE "Valor_Min_Frete"
+#define IMPOSTO "986547125"
+#define VALOR_MIN_FRETE "009069063"
 #define VALOR 1
 #define TAXA_CLASSICO 1
 #define TAXA_PREMIUM 2
-#define TAXA_FIXA_SFRETE_GRATIS "Taxa_Fixa_SFrete_Gratis"
+#define TAXA_FIXA_SFRETE_GRATIS "099863785"
 #define MARGEM_ERRO 0.000001
 
 using namespace std;
+
+int Comparacao_Strings(string str_1, string str_2)
+{
+    int i = 0, Tam_1 = str_1.length(), Tam_2 = str_2.length();
+
+    if (str_1.compare(str_2) > 0)
+    {
+        for (int j = 0; j < Tam_1; j++)
+        {
+            if (str_1[j] != str_2[j])
+                i++;
+        }
+    }
+    else
+    {
+        for (int j = 0; j < Tam_2; j++)
+        {
+            if (str_1[j] != str_2[j])
+                i++;
+        }
+    }
+    return i;
+}
 
 float Ler_Documento_Taxas(string _Categoria, int _TipoAnuncio)
 {
@@ -32,7 +55,7 @@ float Ler_Documento_Taxas(string _Categoria, int _TipoAnuncio)
     while (i == true && !InFile.eof())
     {
         InFile >> Auxiliar;
-        if (Auxiliar.compare(_Categoria) == 0)
+        if (Comparacao_Strings(_Categoria, Auxiliar) < 5)
         {
             for (int f = 0; f < _TipoAnuncio; _TipoAnuncio--)
             {
@@ -108,7 +131,7 @@ void Verificacao_Tomada_Decisao(float *_A_Receber, float *_Imposto, float *_Taxa
     *_Lucro = (*_A_Receber - *_Valor_Custo) / *_Valor_Custo;
 }
 
-float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Peso_Gramas, float _Margem_Lucro, float *Lucro)
+float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Peso_Gramas, float _Margem_Lucro, float *Lucro, float *Taxa)
 {
     float Frete = Tabelacao_Frete(_Peso_Gramas, VALOR);
     float Taxa_Classico = Ler_Documento_Taxas(_Categoria, TAXA_CLASSICO);
@@ -118,7 +141,6 @@ float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Pes
     float _Valor_Venda_SFrete = _Valor_Custo + Ler_Documento_Taxas(TAXA_FIXA_SFRETE_GRATIS, VALOR);
     float A_Receber = 0;
     float Valor_Venda = 0;
-    float Taxa = 0;
 
     // Acressimo Margem de Imposto --------------------------------------------------------
     Acressimo_Porcentagens(&_Valor_Venda_Premium, &Imposto);
@@ -136,14 +158,14 @@ float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Pes
     if (_Valor_Venda_SFrete <= 78.90)
     {
         Valor_Venda = _Valor_Venda_SFrete;
-        Taxa = Taxa_Classico;
+        *Taxa = Taxa_Classico;
         A_Receber = _Valor_Venda_SFrete;
         Verificacao_Tomada_Decisao(&A_Receber, &Imposto, &Taxa_Classico, &_Valor_Custo, &Frete, Lucro);
     }
     else
     {
         Valor_Venda = _Valor_Venda_Premium;
-        Taxa = Taxa_Premium;
+        *Taxa = Taxa_Premium;
         A_Receber = _Valor_Venda_Premium;
         Verificacao_Tomada_Decisao(&A_Receber, &Imposto, &Taxa_Premium, &_Valor_Custo, &Frete, Lucro);
     }
@@ -156,12 +178,12 @@ float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Pes
         Necessidade = _Margem_Lucro - *Lucro;
         Acressimo_Porcentagens(&Valor_Venda, &Necessidade);
         A_Receber = Valor_Venda;
-        Verificacao_Tomada_Decisao(&A_Receber, &Imposto, &Taxa, &_Valor_Custo, &Frete, Lucro);
+        Verificacao_Tomada_Decisao(&A_Receber, &Imposto, Taxa, &_Valor_Custo, &Frete, Lucro);
 
-        if (Taxa == Taxa_Classico && Valor_Venda > 78.90)
+        if (*Taxa == Taxa_Classico && Valor_Venda > 78.90)
         {
             Valor_Venda = _Valor_Venda_Premium;
-            Taxa = Taxa_Premium;
+            *Taxa = Taxa_Premium;
         }
     }
     return Valor_Venda;
@@ -174,10 +196,12 @@ int main()
     float Valor_Venda;
     float Margem_Lucro;
     float Lucro;
-    string Categoria = "Amortecedores";
-
+    float Taxa;
+    string Categoria;
     do
     {
+        cout << "Categoria: ";
+        getline(cin, Categoria);
         cout << "Peso do produto em gramas: ";
         cin >> Peso_Gramas;
         cout << "Valor de custo do produto: ";
@@ -186,10 +210,20 @@ int main()
         cin >> Margem_Lucro;
         Margem_Lucro /= 100;
 
-        Valor_Venda = Precificacao_MarketPlace(Valor_Custo, Categoria, Peso_Gramas, Margem_Lucro, &Lucro);
+        Valor_Venda = Precificacao_MarketPlace(Valor_Custo, Categoria, Peso_Gramas, Margem_Lucro, &Lucro, &Taxa);
 
-        cout << "Valor de venda: " << round(Valor_Venda * 10000) / 100 << endl
-             << "Lucro: " << round(Lucro * 10000) / 100 << endl
-             << endl;
+        cout << endl
+             << "Valor de venda: " << round(Valor_Venda * 100) / 100 << endl
+             << "Lucro: " << round(Lucro * 10000) / 100 << endl;
+        if (Taxa <= 0.14)
+            cout << "Anuncio Classico" << endl
+                 << endl;
+        else
+            cout << "Anuncio Premium" << endl
+                 << endl;
+
+        // Limpar buffer
+        cin.clear();
+        cin.ignore(INT_MAX, '\n');
     } while (true);
 }
