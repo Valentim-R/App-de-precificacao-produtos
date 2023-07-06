@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <cmath>
+#include <windows.h>
 
 #define IMPOSTO "986547125"
 #define VALOR_MIN_FRETE "009069063"
@@ -55,7 +56,7 @@ float Ler_Documento_Taxas(string _Categoria, int _TipoAnuncio)
     while (i == true && !InFile.eof())
     {
         InFile >> Auxiliar;
-        if (Comparacao_Strings(_Categoria, Auxiliar) < 5)
+        if (Comparacao_Strings(_Categoria, Auxiliar) <= (int)Auxiliar.length() / 4)
         {
             for (int f = 0; f < _TipoAnuncio; _TipoAnuncio--)
             {
@@ -172,8 +173,9 @@ float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Pes
 
     // Acionamento para ajuste do lucro -------------------------------------
     float Necessidade = 0;
+    int i = 0;
 
-    while (*Lucro < _Margem_Lucro || *Lucro > _Margem_Lucro + MARGEM_ERRO)
+    while ((*Lucro < _Margem_Lucro || *Lucro > _Margem_Lucro + MARGEM_ERRO) && i < 1000)
     {
         Necessidade = _Margem_Lucro - *Lucro;
         Acressimo_Porcentagens(&Valor_Venda, &Necessidade);
@@ -185,8 +187,56 @@ float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Pes
             Valor_Venda = _Valor_Venda_Premium;
             *Taxa = Taxa_Premium;
         }
+        i++;
     }
     return Valor_Venda;
+}
+
+bool Verificar_Categoria(string _Categoria)
+{
+    ifstream InFile;
+    string Auxiliar;
+    bool i = false;
+    InFile.open("config.txt", ios::in);
+    if (!InFile)
+    {
+        cout << "Nao foi possivel abrir o arquivo\nCriando um novo e reiniciando programa";
+        ofstream OutFile;
+        OutFile.open("config.txt");
+        OutFile.close();
+        abort();
+    }
+    while (i == false && !InFile.eof())
+    {
+        InFile >> Auxiliar;
+        if (Comparacao_Strings(_Categoria, Auxiliar) <= (int)Auxiliar.length() / 4)
+        {
+            cout << endl
+                 << "Utilizando categoria " << Auxiliar << endl;
+            i = true;
+        }
+    }
+    if (InFile.eof())
+    {
+        cout << endl
+             << "Nao foi possivel achar oque esta proucurando" << endl;
+        ofstream OutFile;
+        float x, y;
+        OutFile.open("config.txt", ios::app);
+        cout << "Adicionando Categoria, Digite o nome com '_' no lugar dos espacos: " << endl;
+        cin >> _Categoria;
+        cout << "Taxa Classico: " << endl;
+        cin >> x;
+        cout << "Taxa Premium: " << endl;
+        cin >> y;
+        x /= 100;
+        y /= 100;
+        OutFile << _Categoria << " " << x << " " << y << "\n";
+        OutFile.close();
+        i = true;
+    }
+    InFile.close();
+    return i;
 }
 
 int main()
@@ -198,10 +248,15 @@ int main()
     float Lucro;
     float Taxa;
     string Categoria;
+
     do
     {
-        cout << "Categoria: ";
-        getline(cin, Categoria);
+        do
+        {
+            cout << "Categoria: ";
+            getline(cin, Categoria);
+        } while (!Verificar_Categoria(Categoria));
+        cout << endl;
         cout << "Peso do produto em gramas: ";
         cin >> Peso_Gramas;
         cout << "Valor de custo do produto: ";
@@ -213,8 +268,8 @@ int main()
         Valor_Venda = Precificacao_MarketPlace(Valor_Custo, Categoria, Peso_Gramas, Margem_Lucro, &Lucro, &Taxa);
 
         cout << endl
-             << "Valor de venda: " << round(Valor_Venda * 100) / 100 << endl
-             << "Lucro: " << round(Lucro * 10000) / 100 << endl;
+             << "Valor de venda: R$ " << round(Valor_Venda * 100) / 100 << endl
+             << "Lucro: " << round(Lucro * 10000) / 100 << "%" << endl;
         if (Taxa <= 0.14)
             cout << "Anuncio Classico" << endl
                  << endl;
@@ -225,5 +280,7 @@ int main()
         // Limpar buffer
         cin.clear();
         cin.ignore(INT_MAX, '\n');
+        getchar();
+        system("cls");
     } while (true);
 }
