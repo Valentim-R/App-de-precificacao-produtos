@@ -1,3 +1,0 @@
-g++ -I C:\allegro\include\allegro5 -c main.cpp
-g++.exe -I C:\allegro\include\allegro5 main.o -o programCpp.exe liballegro_monolith.dll.a
-programCpp.exe

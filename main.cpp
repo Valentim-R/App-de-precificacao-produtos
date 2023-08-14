@@ -174,21 +174,48 @@ float Precificacao_MarketPlace(float _Valor_Custo, string _Categoria, float _Pes
     // Acionamento para ajuste do lucro -------------------------------------
     float Necessidade = 0;
     int i = 0;
-
-    while ((*Lucro < _Margem_Lucro || *Lucro > _Margem_Lucro + MARGEM_ERRO) && i < 1000)
+    do
     {
-        Necessidade = _Margem_Lucro - *Lucro;
-        Acressimo_Porcentagens(&Valor_Venda, &Necessidade);
-        A_Receber = Valor_Venda;
-        Verificacao_Tomada_Decisao(&A_Receber, &Imposto, Taxa, &_Valor_Custo, &Frete, Lucro);
-
-        if (*Taxa == Taxa_Classico && Valor_Venda > 78.90)
+        i = 0;
+        while ((*Lucro < _Margem_Lucro || *Lucro > _Margem_Lucro + MARGEM_ERRO) && i < 1000)
         {
-            Valor_Venda = _Valor_Venda_Premium;
-            *Taxa = Taxa_Premium;
+            Necessidade = _Margem_Lucro - *Lucro;
+            Acressimo_Porcentagens(&Valor_Venda, &Necessidade);
+            A_Receber = Valor_Venda;
+            Remocao_Imposto_Taxa(&A_Receber, &Imposto, Taxa);
+
+            if (*Taxa == Taxa_Classico)
+                A_Receber -= Ler_Documento_Taxas(TAXA_FIXA_SFRETE_GRATIS, VALOR);
+            else
+                A_Receber -= Frete;
+
+            if (*Taxa == Taxa_Classico && Valor_Venda > 78.90)
+            {
+                Valor_Venda = _Valor_Venda_Premium;
+                *Taxa = Taxa_Premium;
+            }
+            *Lucro = (A_Receber - _Valor_Custo) / _Valor_Custo;
+            i++;
         }
-        i++;
-    }
+        if (i >= 1000)
+        {
+            if (_Valor_Venda_SFrete <= 78.90)
+            {
+                Valor_Venda = _Valor_Venda_SFrete;
+                *Taxa = Taxa_Classico;
+                A_Receber = _Valor_Venda_SFrete;
+                Verificacao_Tomada_Decisao(&A_Receber, &Imposto, &Taxa_Classico, &_Valor_Custo, &Frete, Lucro);
+            }
+            else
+            {
+                Valor_Venda = _Valor_Venda_Premium;
+                *Taxa = Taxa_Premium;
+                A_Receber = _Valor_Venda_Premium;
+                Verificacao_Tomada_Decisao(&A_Receber, &Imposto, &Taxa_Premium, &_Valor_Custo, &Frete, Lucro);
+            }
+            _Valor_Custo = _Valor_Custo + 1.0;
+        }
+    } while (i >= 1000);
     return Valor_Venda;
 }
 
